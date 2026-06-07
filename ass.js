@@ -1871,5 +1871,4 @@ function celebrate() {
 
 // ─── UTILS ──────────────────────────────────────────────────────
 function rnd(arr) { return arr?arr[Math.floor(Math.random()*arr.length)]:''; }
-
-cat /mnt/user-data/uploads/* 2>/dev/null | head -5; ls /mnt/user-data/uploads/ 2>/dev/null
+

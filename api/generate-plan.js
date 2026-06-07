@@ -28,20 +28,22 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error((err.error?.message) || 'Gemini API ' + response.status);
+      const errMsg = typeof err.error === 'object' ? JSON.stringify(err.error) : (err.error?.message || err.error || 'Gemini API Error ' + response.status);
+      throw new Error(errMsg);
     }
 
     const data = await response.json();
     const rawText = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error('ไม่พบข้อมูล JSON จาก AI (อาจจะจัดรูปแบบผิด)');
+      throw new Error('ไม่พบข้อมูล JSON จาก AI (อาจจะจัดรูปแบบผิด) Response: ' + rawText.substring(0, 100));
     }
 
     const parsedData = JSON.parse(jsonMatch[0]);
     return res.status(200).json(parsedData);
   } catch (error) {
     console.error('Server error:', error);
-    return res.status(500).json({ error: error.message });
+    const errString = typeof error.message === 'object' ? JSON.stringify(error.message) : error.message;
+    return res.status(500).json({ error: errString || String(error) });
   }
 }
