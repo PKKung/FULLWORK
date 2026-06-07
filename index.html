@@ -6388,34 +6388,19 @@ ${topRisks || 'ยังไม่มีข้อมูลความเสี�
 }`;
 
       try {
-        const geminiKey = getGeminiKey();
-        if (!geminiKey) throw new Error('กรุณาใส่ Gemini API Key ในหน้าสแกนอาหารก่อน');
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt + '\n\nIMPORTANT: Return ONLY a valid JSON object starting with { and ending with }. Do NOT include any markdown formatting (like ```json). Ensure all strings are properly escaped and the JSON syntax is strictly valid.' }] }],
-              generationConfig: { temperature: 0.25, maxOutputTokens: 8192 }
-            })
-          }
-        );
-        if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error?.message || 'Gemini API ' + res.status); }
+        // เรียกไปที่ Vercel Serverless Function แทน
+        const res = await fetch('/api/generate-plan', {
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: prompt })
+        });
+        
         const data = await res.json();
-        const rawText2 = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-        const jsonMatch2 = rawText2.match(/\{[\s\S]*\}/);
-        if (!jsonMatch2) {
-          console.error('Gemini returned invalid format:', rawText2);
-          throw new Error('ไม่พบข้อมูล JSON จาก AI (อาจจะจัดรูปแบบผิด)');
+        if (!res.ok) {
+          throw new Error(data.error || 'เกิดข้อผิดพลาดในการติดต่อเซิร์ฟเวอร์');
         }
 
-        let plan;
-        try {
-          plan = JSON.parse(jsonMatch2[0]);
-        } catch (parseErr) {
-          console.error('Failed to parse Gemini JSON:', jsonMatch2[0]);
-          throw new Error('AI ส่งโครงสร้างข้อมูลมาไม่สมบูรณ์ (รูปแบบ JSON ผิดพลาด)');
-        }
+        let plan = data;
 
         plan._goal = mnpCurrentGoal;
         DB.mealPlan = plan; saveDB();
