@@ -22,9 +22,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt + '\n\nIMPORTANT: Return ONLY a valid JSON object starting with { and ending with }. Do NOT include any markdown formatting (like ```json). Ensure all strings are properly escaped and the JSON syntax is strictly valid.' }] }],
           generationConfig: { 
-            temperature: 0.25, 
-            maxOutputTokens: 8192,
-            responseMimeType: "application/json"
+            temperature: 0.1, 
+            maxOutputTokens: 8192
           }
         })
       }
